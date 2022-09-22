@@ -142,7 +142,7 @@ class PointNetSG(nn.Module):
     def forward(self, x):
         """
         :input size: [ B, n_points, 3 ]
-        :output size: [ B, num_classes ]
+        :output size: [ B, n_points, num_categories ]
         """
         B, N, _ = x.shape
 
@@ -163,9 +163,9 @@ class PointNetSG(nn.Module):
 
         x = self.mlp3(x) # [ B, 128, n_points ]
 
-        x = self.mlp4(x)
+        x = self.mlp4(x) # [ B, num_categories, n_points ]
 
-        return x
+        return x.transpose(2, 1)
 
 
 if __name__=='__main__':
