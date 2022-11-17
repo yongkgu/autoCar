@@ -43,4 +43,4 @@ if __name__=='__main__':
     #                                 lookat=[2.6172, 2.0475, 1.532],
     #                                 up=[-0.0694, -0.9768, 0.2024])
 
-    load_sample_pcd(train=True, num=456)
+    load_sample_pcd(train=True, num=300)
