@@ -106,7 +106,7 @@ def plot_image_from_output(img, annotation):
 
         ax.add_patch(rect)
 
-    plt.show()
+    # plt.show()
 # Sample Dataset
 class BotongDataset(Dataset):
     def __init__(self, train=True, transforms=None):
@@ -166,46 +166,48 @@ if __name__ == '__main__':
     model = get_model_object_detection(num_classes)
     model.to(device)
 
-    # construct an optimizer & optimizer
-    params = [p for p in model.parameters() if p.requires_grad]
-    optimizer = torch.optim.SGD(params, lr=0.005,
-                                    momentum=0.9, weight_decay=0.0005)
+    # # construct an optimizer & optimizer
+    # params = [p for p in model.parameters() if p.requires_grad]
+    # optimizer = torch.optim.SGD(params, lr=0.005,
+    #                                 momentum=0.9, weight_decay=0.0005)
 
-    num_epochs = 10
+    # num_epochs = 10
 
     data_transform = transforms.Compose([  # transforms.Compose : list 내의 작업을 연달아 할 수 있게 호출하는 클래스
         transforms.ToTensor() # ToTensor : numpy 이미지에서 torch 이미지로 변경
     ])
 
-    dataset = BotongDataset(train=True, transforms=data_transform)
-    data_loader = torch.utils.data.DataLoader(dataset, batch_size=4, collate_fn=collate_fn)
+    # dataset = BotongDataset(train=True, transforms=data_transform)
+    # data_loader = torch.utils.data.DataLoader(dataset, batch_size=4, collate_fn=collate_fn)
 
     dataset_test = BotongDataset(train=False, transforms=data_transform)
     data_loader_test = torch.utils.data.DataLoader(dataset_test, batch_size=2, collate_fn=collate_fn)
 
-    model.train()
-    for epoch in range(num_epochs):
-        # train for one epoch, printing every 10 iterations
-        print(">> Epoch", epoch)
-        i = 0
-        epoch_loss = 0
-        for imgs, annotations in tqdm(data_loader):
-            i += 1
+    # model.train()
+    # for epoch in range(num_epochs):
+    #     # train for one epoch, printing every 10 iterations
+    #     print(">> Epoch", epoch)
+    #     i = 0
+    #     epoch_loss = 0
+    #     for imgs, annotations in tqdm(data_loader):
+    #         i += 1
             
-            imgs = list(img.to(device) for img in imgs)
-            annotations = [{k: v.to(device) for k, v in t.items()} for t in annotations]
+    #         imgs = list(img.to(device) for img in imgs)
+    #         annotations = [{k: v.to(device) for k, v in t.items()} for t in annotations]
 
-            loss_dict = model(imgs, annotations)
-            losses = sum(loss for loss in loss_dict.values())        
+    #         loss_dict = model(imgs, annotations)
+    #         losses = sum(loss for loss in loss_dict.values())        
 
-            optimizer.zero_grad()
-            losses.backward()
-            optimizer.step() 
-            epoch_loss += losses
-        print(f'epoch : {epoch+1}, Loss : {epoch_loss}')
+    #         optimizer.zero_grad()
+    #         losses.backward()
+    #         optimizer.step() 
+    #         epoch_loss += losses
+    #     print(f'epoch : {epoch+1}, Loss : {epoch_loss}')
 
-    torch.save(model.state_dict(),f'model_{num_epochs}.pt')
-    model.load_state_dict(torch.load(f'model_{num_epochs}.pt'))
+    # torch.save(model.state_dict(),f'model_{num_epochs}.pt')
+    # model.load_state_dict(torch.load(f'model_{num_epochs}.pt'))
+
+    model.load_state_dict(torch.load("/Users/hyojin/Boaz_project/model_10.pt"))
     
     """
         Test로 평가
@@ -217,11 +219,19 @@ if __name__ == '__main__':
 
             pred = make_prediction(model, imgs, 0.5)
             print(pred)
-            break
 
-    _idx = 1
-    print("Target : ", annotations[_idx]['labels'])
-    plot_image_from_output(imgs[_idx], annotations[_idx])
-    print("Prediction : ", pred[_idx]['labels'])
-    plot_image_from_output(imgs[_idx], pred[_idx])
-    print("That's it!")
+            for idx in range(len(imgs)):
+                plot_image_from_output(imgs[idx], annotations[idx])
+                plt.title("Ground Truth")
+                plt.show()
+
+                plot_image_from_output(imgs[idx], pred[idx])
+                plt.title("Prediction")
+                plt.show()
+
+    # _idx = 1
+    # print("Target : ", annotations[_idx]['labels'])
+    # plot_image_from_output(imgs[_idx], annotations[_idx])
+    # print("Prediction : ", pred[_idx]['labels'])
+    # plot_image_from_output(imgs[_idx], pred[_idx])
+    # print("That's it!")
