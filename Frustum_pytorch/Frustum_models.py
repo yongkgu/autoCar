@@ -1,10 +1,12 @@
 """
     Frustum Pointnets Model
 """
+from pickletools import optimize
 import torch
 import torch.nn as nn
 import torch.nn.parallel
 import torch.utils.data
+import torch.optim as optim
 from torch.autograd import Variable
 import numpy as np
 import torch.nn.functional as F
@@ -40,15 +42,15 @@ class PointNet(nn.Module):
         self.mlp9 = nn.Linear(128, 128)
         self.mlp10 = nn.Linear(128, 2)
 
-    def forward(self, inputs):
-        outputs1 = self.mlp1(inputs)
+    def forward(self, point_cloud):
+        outputs1 = self.mlp1(point_cloud)
         outputs1 = self.mlp2(outputs1)
 
         outputs2 = self.mlp3(outputs1)
         outputs2 = self.mlp4(outputs2)
         outputs2 = self.mlp5(outputs2)
 
-        outputs2 = torch.cat(outputs2, outputs1)
+        outputs2 = torch.cat(outputs2, outputs1, dim=-1)
 
         outputs2 = self.mlp6(outputs2)
         outputs2 = self.mlp7(outputs2)
@@ -74,13 +76,13 @@ class TNet(nn.Module):
         self.fc2 = nn.Linear(256, 128)
         self.fc3 = nn.Linear(128, 3)
 
-    def forward(self, inputs, input_labels):
-        outputs = self.mlp1(inputs)
+    def forward(self, point_cloud, input_labels):
+        outputs = self.mlp1(point_cloud)
         outputs = self.mlp2(outputs)
         outputs = self.mlp3(outputs)
 
         outputs = self.maxpool(outputs)
-        outputs = torch.cat(outputs, input_labels)
+        outputs = torch.cat(outputs, input_labels, dim=3)
 
         outputs = self.fc1(outputs)
         outputs = self.fc2(outputs)
@@ -105,13 +107,13 @@ class Box_estimator(nn.Module):
         self.fc2 = nn.Linear(512, 256)
         self.fc3 = nn.Linear(256, config["num_box_parameters"])
 
-    def forward(self, inputs, input_labels):
-        outputs = self.mlp1(inputs)
+    def forward(self, point_cloud, input_labels):
+        outputs = self.mlp1(point_cloud)
         outputs = self.mlp2(outputs)
         outputs = self.mlp3(outputs)
         outputs = self.mlp4(outputs)
 
-        outputs = torch.cat(outputs, input_labels)
+        outputs = torch.cat(outputs, input_labels, dim=-1)
 
         outputs = self.fc1(outputs)
         outputs = self.fc2(outputs)
@@ -119,7 +121,7 @@ class Box_estimator(nn.Module):
 
         return outputs
 # Final Model
-class model(nn.Module):
+class FrustumPointNet(nn.Module):
     def __init__(self, config):
         super().__init__()
 
@@ -134,9 +136,38 @@ class model(nn.Module):
 
 def train(config):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+    
+    # Load Model
+    model = FrustumPointNet(config).to(device)
+    # Load Dataset
+
+    # Loss Func. & Optimizer
+    
+    optimizer = optim.Adam(model.parameters(), lr=config["learning_rate"])
+
+    # Train Model
+    model.train()
+    for epoch in range(config["epochs"]):
+        costs = []
+
 
 def test(config):
-    pass
+    device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
+
+    # Load Model
+    model = FrustumPointNet(config).to(device)
+    # Load Dataset
+
+
+
+    # Test Model
+    model.eval()
+    with torch.no_grad():
+        pass
+
+
+
+
 
 if __name__=='__main__':
     print("[ Frustum_models.py ]")
@@ -152,7 +183,18 @@ if __name__=='__main__':
         "num_box_parameters" : 10
     }
 
-    if config["mode"]=="train":
-        train(config)
-    else:
-        test(config)
+    # if config["mode"]=="train":
+    #     train(config)
+    # else:
+    #     test(config)
+
+
+    TNet_model = TNet(config)
+
+    input3 = torch.rand((16, 60, 3))
+    input_labels = torch.rand((16, 2))
+
+    TNet_model.train()
+
+    print(TNet_model(input3, input_labels))
+    # print(Box_estimator_model(input3, input_labels))
