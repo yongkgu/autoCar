@@ -1,1 +1,1 @@
-# 2022년 BOAZ 19기 ADV autoCar 🚗🚓🚕
+# 2022년 BOAZ 18기 ADV autoCar 🚗🚓🚕
